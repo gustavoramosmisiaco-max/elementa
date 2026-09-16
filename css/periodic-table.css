@@ -1,0 +1,388 @@
+/**
+ * ELEMENTA - Estilos de la Tabla Periódica Tradicional & Educativa
+ * Inspirada en el póster clásico de la Tabla Periódica de los Elementos
+ */
+
+.table-viewport-container {
+  width: 100%;
+  overflow-x: auto;
+  padding: 10px 0 30px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-viewport-container::-webkit-scrollbar {
+  height: 9px;
+}
+
+.table-viewport-container::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+/* Big Centered Title (as shown in reference image) */
+.periodic-main-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  font-family: 'Inter', sans-serif;
+  text-transform: uppercase;
+}
+
+/* Main 18-column Periodic Grid */
+.periodic-grid-table {
+  display: grid;
+  grid-template-columns: 32px repeat(18, minmax(78px, 1fr));
+  grid-template-rows: 40px repeat(7, minmax(92px, 1fr));
+  gap: 3px;
+  min-width: 1460px;
+  margin: 0 auto;
+  background: transparent;
+}
+
+/* Header Cells (Groups: IUPAC + Roman) */
+.grid-header-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1.1;
+  transition: all var(--transition-fast);
+}
+
+.grid-header-col .iupac-num {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.grid-header-col .roman-num {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.grid-header-col:hover {
+  background: var(--accent-cyan);
+  color: #fff;
+  border-color: var(--accent-cyan);
+}
+
+.grid-header-col:hover .roman-num {
+  color: #fff;
+}
+
+/* Row Period Header */
+.grid-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text-primary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.grid-header-row:hover {
+  background: var(--accent-cyan);
+  color: #fff;
+  border-color: var(--accent-cyan);
+}
+
+.grid-corner-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* Central "Notación / Guía" Legend Box */
+.grid-notation-box {
+  grid-column: 4 / 13; /* Columns 3 to 12 */
+  grid-row: 2 / 4;    /* Periods 1 to 2/3 */
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+  margin: 4px;
+}
+
+.notation-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-decoration: underline;
+  margin-bottom: 6px;
+}
+
+.notation-card-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.notation-diagram {
+  position: relative;
+  width: 140px;
+  height: 125px;
+  background: var(--bg-surface-elevated);
+  border: 2px solid #0f172a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.notation-labels-left, .notation-labels-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.notation-pointer-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notation-pointer-item strong {
+  color: var(--text-primary);
+}
+
+/* Classic 6-Field Element Cell (Exact to reference chart) */
+.element-cell {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 3px 5px 4px 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Subtle category bar at cell top */
+.element-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--elem-accent, var(--accent-cyan));
+}
+
+.element-cell:hover, .element-cell:focus-visible {
+  transform: translateY(-3px) scale(1.06);
+  z-index: 40;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 12px var(--elem-accent, rgba(2, 132, 199, 0.4));
+  border-color: #0f172a;
+  outline: none;
+}
+
+.element-cell.dimmed {
+  opacity: 0.15;
+  filter: grayscale(80%);
+}
+
+.element-cell.highlight-column, .element-cell.highlight-row {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Top Row: Atomic Num (left) & Atomic Mass (right) */
+.cell-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 11px;
+  line-height: 1;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.cell-atomic-num {
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.cell-atomic-mass {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* Mid Row: Electronegativity (left), Symbol (center), Oxidation (right) */
+.cell-row-mid {
+  display: grid;
+  grid-template-columns: 20px 1fr 24px;
+  align-items: center;
+  margin: 1px 0;
+}
+
+.cell-electronegativity {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+
+.cell-symbol {
+  font-size: 22px;
+  font-weight: 900;
+  text-align: center;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.cell-oxidation {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.1;
+  word-break: break-all;
+}
+
+/* Sub-center Row: Electron Configuration */
+.cell-electron-config {
+  font-size: 8.5px;
+  color: var(--text-muted);
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+/* Bottom Row: Name */
+.cell-name {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+/* Placeholder for Lanthanides/Actinides in main table */
+.grid-cell-placeholder {
+  background: var(--bg-surface-elevated);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  text-align: center;
+}
+
+.placeholder-range {
+  font-weight: 900;
+  color: var(--accent-blue);
+  font-size: 12px;
+}
+
+.placeholder-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* Bottom Detached Section (Lantánidos & Actínidos) */
+.periodic-detached-wrapper {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 1460px;
+  padding-left: calc(32px + (78px * 2) + (3px * 2)); /* Perfectly aligned with Group 3 */
+}
+
+.detached-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.detached-vertical-label {
+  width: 90px;
+  height: 92px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.detached-row .element-cell {
+  width: minmax(78px, 1fr);
+  flex: 1;
+  height: 92px;
+}
+
+/* State of Matter Glow in State Mode */
+.element-cell.phase-solid {
+  border-left: 3.5px solid #2563eb;
+}
+
+.element-cell.phase-liquid {
+  border-left: 3.5px solid #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+}
+
+.element-cell.phase-gas {
+  border-left: 3.5px solid #e11d48;
+  background: rgba(225, 29, 72, 0.08);
+}

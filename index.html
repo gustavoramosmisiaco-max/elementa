@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ELEMENTA — Tabla Periódica Interactiva</title>
+  <meta name="description" content="Tabla periódica interactiva, modelo de Bohr 2D/3D, espectro de emisión, calculadora de masa molar, balanceador de ecuaciones y modo práctica para estudiantes." />
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/periodic-table.css" />
+  <link rel="stylesheet" href="css/element-modal.css" />
+  <link rel="stylesheet" href="css/tools.css" />
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <div class="brand-logo-icon">⚛️</div>
+        <div class="brand-text">
+          <h1>ELEMENTA</h1>
+          <span>Tabla Periódica Interactiva</span>
+        </div>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="main-nav" aria-label="Navegación principal">
+        <button class="nav-tab-btn active" data-view="view-table">
+          <span>📊</span> Tabla 2D
+        </button>
+        <button class="nav-tab-btn" data-view="view-3d">
+          <span>🌐</span> Visualizador 3D
+        </button>
+        <button class="nav-tab-btn" data-view="view-molar">
+          <span>⚖️</span> Masa Molar
+        </button>
+        <button class="nav-tab-btn" data-view="view-balancer">
+          <span>⚗️</span> Balanceador
+        </button>
+        <button class="nav-tab-btn" data-view="view-comparator">
+          <span>🔍</span> Comparador
+        </button>
+        <button class="nav-tab-btn" data-view="view-quiz">
+          <span>🎯</span> Modo Práctica
+        </button>
+      </nav>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <button id="btnPrintTable" class="icon-btn" title="Imprimir / Exportar Tabla (Ctrl+P)" aria-label="Imprimir">🖨️</button>
+        <button id="btnThemeToggle" class="icon-btn" title="Cambiar Tema (Claro / Oscuro)" aria-label="Cambiar tema">☀️</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Controls & Filters Section (Active on Table View) -->
+  <section class="controls-bar-section" id="tableControlsSection">
+    <div class="controls-bar-inner">
+      <!-- Top Row: Search & Visual Mode Switches -->
+      <div class="controls-row-top">
+        <div class="search-box-wrapper">
+          <span class="search-icon-symbol">🔍</span>
+          <input type="text" id="globalSearchInput" class="search-input" placeholder="Buscar por nombre, símbolo, número atómico o masa..." aria-label="Buscar elementos" />
+        </div>
+
+        <div class="mode-switches-group">
+          <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Modo de Color:</span>
+          <button class="view-mode-btn active" id="btnModeCategory">🎨 Familias</button>
+          <button class="view-mode-btn" id="btnModeState">🌡️ Estados (T°)</button>
+          <button class="view-mode-btn" id="btnModeHeatmap">🔥 Mapas de Calor</button>
+
+          <!-- Temperature Slider Widget -->
+          <div class="temp-slider-box" id="tempSliderWrapper" style="display:none;">
+            <span>Temp:</span>
+            <input type="range" id="tempRangeSlider" min="0" max="6000" step="25" value="298.15" />
+            <span class="temp-display-badge" id="tempDisplayBadge">25 °C (298 K)</span>
+          </div>
+
+          <!-- Heatmap Property Selector -->
+          <div class="temp-slider-box" id="heatmapSelectWrapper" style="display:none;">
+            <span>Propiedad:</span>
+            <select id="heatmapPropSelect" class="compare-dropdown" style="padding:4px 8px;font-size:12px;">
+              <option value="electronegativity">Electronegatividad (Pauling)</option>
+              <option value="atomicRadius">Radio Atómico (pm)</option>
+              <option value="ionizationEnergy">1ª Energía de Ionización (kJ/mol)</option>
+              <option value="density">Densidad (g/cm³)</option>
+              <option value="meltingPoint">Punto de Fusión (K)</option>
+            </select>
+          </div>
+
+          <!-- Quick Filters: Block & Type -->
+          <select id="blockFilterSelect" class="compare-dropdown" style="padding:4px 8px;font-size:12px;width:auto;">
+            <option value="all">Bloques: Todos</option>
+            <option value="s">Bloque s</option>
+            <option value="p">Bloque p</option>
+            <option value="d">Bloque d</option>
+            <option value="f">Bloque f</option>
+          </select>
+
+          <select id="typeFilterSelect" class="compare-dropdown" style="padding:4px 8px;font-size:12px;width:auto;">
+            <option value="all">Clasificación: Todas</option>
+            <option value="metals">Metales</option>
+            <option value="nonmetals">No Metales</option>
+            <option value="metalloids">Metaloides</option>
+            <option value="radioactive">Radiactivos</option>
+            <option value="synthetic">Sintéticos</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Category Pills -->
+      <div class="filter-pills-row" id="categoryPillsContainer"></div>
+    </div>
+  </section>
+
+  <!-- Main Viewport for SPA Sections -->
+  <main class="main-content-viewport">
+    <!-- 1. View: 2D Periodic Table Grid -->
+    <section class="view-section active" id="view-table">
+      <div class="table-viewport-container">
+        <div id="periodicTableContainer"></div>
+      </div>
+    </section>
+
+    <!-- 2. View: 3D Periodic Table -->
+    <section class="view-section" id="view-3d">
+      <div id="table3DContainer"></div>
+    </section>
+
+    <!-- 3. View: Molar Mass Calculator -->
+    <section class="view-section" id="view-molar">
+      <div id="molarToolContainer"></div>
+    </section>
+
+    <!-- 4. View: Chemical Equation Balancer -->
+    <section class="view-section" id="view-balancer">
+      <div id="balancerToolContainer"></div>
+    </section>
+
+    <!-- 5. View: Element Comparator -->
+    <section class="view-section" id="view-comparator">
+      <div id="comparatorToolContainer"></div>
+    </section>
+
+    <!-- 6. View: Practice Quiz -->
+    <section class="view-section" id="view-quiz">
+      <div id="quizToolContainer"></div>
+    </section>
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <div><strong>ELEMENTA</strong> — Tabla Periódica Interactiva para Educación Química Secundaria y Superior.</div>
+    <div class="footer-links">
+      <span>Datos verificados bajo estándares de la IUPAC y NIST</span>
+      <span>•</span>
+      <span>Funcionamiento 100% Offline</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <!-- 1. Three.js for 3D Visualizations -->
+  <script src="js/lib/three.min.js"></script>
+
+  <!-- 2. Master Verified Chemical Database (118 Elements) -->
+  <script src="js/data/elements-data.js"></script>
+
+  <!-- 3. Components -->
+  <script src="js/components/bohr-model.js"></script>
+  <script src="js/components/atom-3d.js"></script>
+  <script src="js/components/emission-spectrum.js"></script>
+  <script src="js/components/table-3d.js"></script>
+  <script src="js/components/element-modal.js"></script>
+  <script src="js/components/table-renderer.js"></script>
+
+  <!-- 4. Educational Tools -->
+  <script src="js/tools/molar-mass.js"></script>
+  <script src="js/tools/equation-balancer.js"></script>
+  <script src="js/tools/comparator.js"></script>
+  <script src="js/tools/practice-quiz.js"></script>
+
+  <!-- 5. Main Application Controller -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>
