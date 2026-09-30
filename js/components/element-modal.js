@@ -275,6 +275,26 @@
         }
       });
 
+      // Deslizar horizontalmente sobre la cabecera o la descripción cambia de elemento (celular)
+      let touchStartX = null;
+      let touchStartY = null;
+      const swipeZones = this.overlay.querySelectorAll('.modal-header, .overview-info-card');
+      swipeZones.forEach(zone => {
+        zone.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        zone.addEventListener('touchend', (e) => {
+          if (touchStartX === null) return;
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          touchStartX = null;
+          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            this.navigateRelative(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+      });
+
       // Navigation arrows
       this.overlay.querySelector('#btnPrevElement').addEventListener('click', () => this.navigateRelative(-1));
       this.overlay.querySelector('#btnNextElement').addEventListener('click', () => this.navigateRelative(1));

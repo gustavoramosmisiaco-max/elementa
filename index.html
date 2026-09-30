@@ -12,11 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/theme.css?v=2" />
-  <link rel="stylesheet" href="css/styles.css?v=2" />
-  <link rel="stylesheet" href="css/periodic-table.css?v=2" />
-  <link rel="stylesheet" href="css/element-modal.css?v=2" />
-  <link rel="stylesheet" href="css/tools.css?v=2" />
+  <link rel="stylesheet" href="css/theme.css?v=3" />
+  <link rel="stylesheet" href="css/styles.css?v=3" />
+  <link rel="stylesheet" href="css/periodic-table.css?v=3" />
+  <link rel="stylesheet" href="css/element-modal.css?v=3" />
+  <link rel="stylesheet" href="css/tools.css?v=3" />
+  <link rel="stylesheet" href="css/layout.css?v=3" />
 </head>
 <body>
 
@@ -31,25 +32,25 @@
         </div>
       </div>
 
-      <!-- Main Navigation Tabs -->
+      <!-- Main Navigation Tabs (barra inferior tipo app en celulares) -->
       <nav class="main-nav" aria-label="Navegación principal">
         <button class="nav-tab-btn active" data-view="view-table">
-          <span>📊</span> Tabla 2D
+          <span class="nav-icon">📊</span><span class="nav-label-full">Tabla 2D</span><span class="nav-label-short">Tabla</span>
         </button>
         <button class="nav-tab-btn" data-view="view-3d">
-          <span>🌐</span> Visualizador 3D
+          <span class="nav-icon">🌐</span><span class="nav-label-full">Visualizador 3D</span><span class="nav-label-short">3D</span>
         </button>
         <button class="nav-tab-btn" data-view="view-molar">
-          <span>⚖️</span> Masa Molar
+          <span class="nav-icon">⚖️</span><span class="nav-label-full">Masa Molar</span><span class="nav-label-short">Masa</span>
         </button>
         <button class="nav-tab-btn" data-view="view-balancer">
-          <span>⚗️</span> Balanceador
+          <span class="nav-icon">⚗️</span><span class="nav-label-full">Balanceador</span><span class="nav-label-short">Balancear</span>
         </button>
         <button class="nav-tab-btn" data-view="view-comparator">
-          <span>🔍</span> Comparador
+          <span class="nav-icon">🔍</span><span class="nav-label-full">Comparador</span><span class="nav-label-short">Comparar</span>
         </button>
         <button class="nav-tab-btn" data-view="view-quiz">
-          <span>🎯</span> Modo Práctica
+          <span class="nav-icon">🎯</span><span class="nav-label-full">Modo Práctica</span><span class="nav-label-short">Práctica</span>
         </button>
       </nav>
 
@@ -64,18 +65,29 @@
   <!-- Controls & Filters Section (Active on Table View) -->
   <section class="controls-bar-section" id="tableControlsSection">
     <div class="controls-bar-inner">
-      <!-- Top Row: Search & Visual Mode Switches -->
+      <!-- Fila principal: búsqueda + botón de filtros (celular) -->
       <div class="controls-row-top">
         <div class="search-box-wrapper">
           <span class="search-icon-symbol">🔍</span>
-          <input type="text" id="globalSearchInput" class="search-input" placeholder="Buscar por nombre, símbolo, número atómico o masa..." aria-label="Buscar elementos" />
+          <input type="search" id="globalSearchInput" class="search-input" placeholder="Buscar: nombre, símbolo o número…" aria-label="Buscar elementos" autocomplete="off" enterkeyhint="search" />
+          <span class="search-count" id="searchResultCount" aria-live="polite"></span>
+          <button type="button" class="search-clear-btn" id="btnClearSearch" aria-label="Borrar búsqueda" title="Borrar (Esc)">✕</button>
         </div>
 
-        <div class="mode-switches-group">
-          <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Modo de Color:</span>
-          <button class="view-mode-btn active" id="btnModeCategory">🎨 Familias</button>
-          <button class="view-mode-btn" id="btnModeState">🌡️ Estados (T°)</button>
-          <button class="view-mode-btn" id="btnModeHeatmap">🔥 Mapas de Calor</button>
+        <button type="button" class="filters-toggle-btn" id="btnToggleFilters" aria-expanded="false" aria-controls="filtersPanel">
+          ⚙️ Filtros <span class="filters-badge" id="filtersActiveBadge"></span>
+        </button>
+      </div>
+
+      <!-- Panel de filtros (siempre visible en PC, plegable en celular) -->
+      <div class="filters-panel" id="filtersPanel">
+        <div class="filters-group">
+          <span class="filters-group-label">Colorear por</span>
+          <div class="segmented-control" role="group" aria-label="Modo de color">
+            <button class="view-mode-btn active" id="btnModeCategory">🎨 Familias</button>
+            <button class="view-mode-btn" id="btnModeState">🌡️ Estados</button>
+            <button class="view-mode-btn" id="btnModeHeatmap">🔥 Calor</button>
+          </div>
 
           <!-- Temperature Slider Widget -->
           <div class="temp-slider-box" id="tempSliderWrapper" style="display:none;">
@@ -87,7 +99,7 @@
           <!-- Heatmap Property Selector -->
           <div class="temp-slider-box" id="heatmapSelectWrapper" style="display:none;">
             <span>Propiedad:</span>
-            <select id="heatmapPropSelect" class="compare-dropdown" style="padding:4px 8px;font-size:12px;">
+            <select id="heatmapPropSelect" class="compare-dropdown">
               <option value="electronegativity">Electronegatividad (Pauling)</option>
               <option value="atomicRadius">Radio Atómico (pm)</option>
               <option value="ionizationEnergy">1ª Energía de Ionización (kJ/mol)</option>
@@ -95,9 +107,11 @@
               <option value="meltingPoint">Punto de Fusión (K)</option>
             </select>
           </div>
+        </div>
 
-          <!-- Quick Filters: Block & Type -->
-          <select id="blockFilterSelect" class="compare-dropdown" style="padding:4px 8px;font-size:12px;width:auto;">
+        <div class="filters-group">
+          <span class="filters-group-label">Filtrar</span>
+          <select id="blockFilterSelect" class="compare-dropdown" aria-label="Filtrar por bloque">
             <option value="all">Bloques: Todos</option>
             <option value="s">Bloque s</option>
             <option value="p">Bloque p</option>
@@ -105,7 +119,7 @@
             <option value="f">Bloque f</option>
           </select>
 
-          <select id="typeFilterSelect" class="compare-dropdown" style="padding:4px 8px;font-size:12px;width:auto;">
+          <select id="typeFilterSelect" class="compare-dropdown" aria-label="Filtrar por clasificación">
             <option value="all">Clasificación: Todas</option>
             <option value="metals">Metales</option>
             <option value="nonmetals">No Metales</option>
@@ -113,11 +127,13 @@
             <option value="radioactive">Radiactivos</option>
             <option value="synthetic">Sintéticos</option>
           </select>
-        </div>
-      </div>
 
-      <!-- Bottom Row: Category Pills -->
-      <div class="filter-pills-row" id="categoryPillsContainer"></div>
+          <button type="button" class="pill-btn reset-filters-btn" id="btnResetFilters">↺ Limpiar</button>
+        </div>
+
+        <!-- Category Pills (leyenda + filtro) -->
+        <div class="filter-pills-row" id="categoryPillsContainer"></div>
+      </div>
     </div>
   </section>
 
@@ -125,6 +141,10 @@
   <main class="main-content-viewport">
     <!-- 1. View: 2D Periodic Table Grid -->
     <section class="view-section active" id="view-table">
+      <p class="table-hint">
+        <span class="hint-pointer">💡 Pasa el cursor sobre un elemento para ver sus datos · <strong>Clic</strong> para la ficha completa · <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> para moverte · <kbd>/</kbd> para buscar</span>
+        <span class="hint-touch">👆 Toca un elemento para ver su ficha completa · Desliza la ficha para cambiar de elemento</span>
+      </p>
       <div class="table-viewport-container">
         <div id="periodicTableContainer"></div>
       </div>
@@ -168,27 +188,27 @@
 
   <!-- Scripts -->
   <!-- 1. Three.js for 3D Visualizations -->
-  <script src="js/lib/three.min.js?v=2"></script>
+  <script src="js/lib/three.min.js?v=3"></script>
 
   <!-- 2. Master Verified Chemical Database (118 Elements) -->
-  <script src="js/data/elements-data.js?v=2"></script>
+  <script src="js/data/elements-data.js?v=3"></script>
 
   <!-- 3. Components -->
-  <script src="js/components/bohr-model.js?v=2"></script>
-  <script src="js/components/atom-3d.js?v=2"></script>
-  <script src="js/components/emission-spectrum.js?v=2"></script>
-  <script src="js/components/table-3d.js?v=2"></script>
-  <script src="js/components/element-modal.js?v=2"></script>
-  <script src="js/components/table-renderer.js?v=2"></script>
+  <script src="js/components/bohr-model.js?v=3"></script>
+  <script src="js/components/atom-3d.js?v=3"></script>
+  <script src="js/components/emission-spectrum.js?v=3"></script>
+  <script src="js/components/table-3d.js?v=3"></script>
+  <script src="js/components/element-modal.js?v=3"></script>
+  <script src="js/components/table-renderer.js?v=3"></script>
 
   <!-- 4. Educational Tools -->
-  <script src="js/tools/molar-mass.js?v=2"></script>
-  <script src="js/tools/equation-balancer.js?v=2"></script>
-  <script src="js/tools/comparator.js?v=2"></script>
-  <script src="js/tools/practice-quiz.js?v=2"></script>
+  <script src="js/tools/molar-mass.js?v=3"></script>
+  <script src="js/tools/equation-balancer.js?v=3"></script>
+  <script src="js/tools/comparator.js?v=3"></script>
+  <script src="js/tools/practice-quiz.js?v=3"></script>
 
   <!-- 5. Main Application Controller -->
-  <script src="js/app.js?v=2"></script>
+  <script src="js/app.js?v=3"></script>
 
 </body>
 </html>

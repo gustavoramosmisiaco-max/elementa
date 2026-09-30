@@ -114,7 +114,8 @@
         const matchSym = el.symbol.toLowerCase().includes(q);
         const matchName = el.name.toLowerCase().includes(q);
         const matchLatin = (el.latinName || '').toLowerCase().includes(q);
-        const matchDesc = (el.description || '').toLowerCase().includes(q);
+        // La descripción solo cuenta con 3+ letras; si no, una letra coincide con todo
+        const matchDesc = q.length >= 3 && (el.description || '').toLowerCase().includes(q);
         if (!matchNum && !matchSym && !matchName && !matchLatin && !matchDesc) {
           return false;
         }
@@ -165,6 +166,7 @@
     render() {
       if (!this.container) return;
       const elements = window.ELEMENTS_DATA || [];
+      this.matchedElements = elements.filter(el => this.matchesFilter(el));
 
       let html = '<h2 class="periodic-main-title">Tabla periódica de los elementos</h2>';
       html += '<div class="periodic-grid-table">';
@@ -228,7 +230,7 @@
         if (el.group && el.period) {
           const colIndex = el.group + 1;
           const rowIndex = el.period + 1;
-          html += this.renderElementCell(el, `grid-column:${colIndex}; grid-row:${rowIndex};`);
+          html += this.renderElementCell(el, `grid-column:${colIndex}; grid-row:${rowIndex};`, el.period, el.group);
         }
       });
 
@@ -242,25 +244,27 @@
       html += '<div class="detached-label" style="grid-column:2 / 4; grid-row:1;"><span class="detached-label-full">Lantánidos</span><span class="detached-label-short">*</span></div>';
       for (let num = 57; num <= 71; num++) {
         const el = window.getElementByNumber(num);
-        if (el) html += this.renderElementCell(el, `grid-column:${num - 57 + 4}; grid-row:1;`);
+        if (el) html += this.renderElementCell(el, `grid-column:${num - 57 + 4}; grid-row:1;`, 8, num - 57 + 3);
       }
 
       // 8b. Actinides (89-103)
       html += '<div class="detached-label" style="grid-column:2 / 4; grid-row:2;"><span class="detached-label-full">Actínidos</span><span class="detached-label-short">**</span></div>';
       for (let num = 89; num <= 103; num++) {
         const el = window.getElementByNumber(num);
-        if (el) html += this.renderElementCell(el, `grid-column:${num - 89 + 4}; grid-row:2;`);
+        if (el) html += this.renderElementCell(el, `grid-column:${num - 89 + 4}; grid-row:2;`, 9, num - 89 + 3);
       }
 
       html += '</div>'; // End detached wrapper
 
       this.container.innerHTML = html;
       this.attachCellEvents();
+      if (typeof this.options.onRender === 'function') this.options.onRender(this.matchedElements);
     }
 
     renderNotationGuideCard() {
       return `
         <div class="grid-notation-box" style="grid-column: 4 / 14; grid-row: 2 / 5;">
+          <div class="notation-preview" aria-live="polite"></div>
           <div class="notation-card-wrapper">
             <div class="notation-labels-left">
               <div class="notation-pointer-item">
@@ -307,7 +311,7 @@
       `;
     }
 
-    renderElementCell(el, gridPositionStyle = '') {
+    renderElementCell(el, gridPositionStyle = '', navRow = '', navCol = '') {
       const isMatched = this.matchesFilter(el);
       const catMeta = window.CATEGORY_META[el.category] || { color: '#00f0ff', bgAlpha: 'rgba(2,132,199,0.06)' };
 
@@ -341,6 +345,8 @@
              data-group="${el.group || ''}"
              data-period="${el.period}"
              data-block="${el.block}"
+             data-r="${navRow}"
+             data-c="${navCol}"
              style="${styleAttr}"
              tabindex="0"
              role="button"
@@ -374,26 +380,135 @@
         const num = parseInt(cell.getAttribute('data-number'), 10);
         const el = window.getElementByNumber(num);
 
-        cell.addEventListener('click', () => {
-          if (typeof this.options.onElementClick === 'function') {
-            this.options.onElementClick(el);
-          } else if (window.ElementModal && window.ElementModal.show) {
-            window.ElementModal.show(el);
-          }
-        });
+        cell.addEventListener('click', () => this.openElement(el));
 
         cell.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (window.ElementModal && window.ElementModal.show) {
-              window.ElementModal.show(el);
-            }
+            this.openElement(el);
+          } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            e.preventDefault();
+            this.moveFocus(cell, e.key);
           }
         });
       });
     }
 
+    openElement(el) {
+      if (!el) return;
+      if (typeof this.options.onElementClick === 'function') {
+        this.options.onElementClick(el);
+      } else if (window.ElementModal && window.ElementModal.show) {
+        window.ElementModal.show(el);
+      }
+    }
+
+    /** Navegación con flechas: salta huecos y pasa a la fila/columna más cercana */
+    moveFocus(cell, key) {
+      const r0 = parseInt(cell.dataset.r, 10);
+      const c0 = parseInt(cell.dataset.c, 10);
+      const at = Array.from(this.container.querySelectorAll('.element-cell[data-r]'))
+        .map(node => ({ node, r: parseInt(node.dataset.r, 10), c: parseInt(node.dataset.c, 10) }));
+      const byDistance = (a, b) => Math.abs(a.c - c0) - Math.abs(b.c - c0);
+      let target = null;
+
+      if (key === 'ArrowLeft' || key === 'ArrowRight') {
+        const dir = key === 'ArrowRight' ? 1 : -1;
+        target = at.filter(p => p.r === r0 && (p.c - c0) * dir > 0).sort(byDistance)[0] || null;
+      } else {
+        const dir = key === 'ArrowDown' ? 1 : -1;
+        for (let r = r0 + dir; r >= 1 && r <= 9 && !target; r += dir) {
+          target = at.filter(p => p.r === r).sort(byDistance)[0] || null;
+        }
+      }
+
+      if (target) target.node.focus();
+    }
+
+    getPhaseLabel(el) {
+      const phase = this.getElementPhaseAtTemp(el, this.currentMode === 'state' ? this.currentTempK : 298.15);
+      return { solid: '🧱 Sólido', liquid: '💧 Líquido', gas: '💨 Gas' }[phase] || '❔ Desconocido';
+    }
+
+    formatNum(val, unit = '', digits = null) {
+      if (val === null || val === undefined || val === '' || isNaN(val)) return '—';
+      const n = digits !== null ? Number(val).toFixed(digits) : `${val}`;
+      return `${n.replace('.', ',')}${unit}`;
+    }
+
+    /** Muestra los datos del elemento en el recuadro central (vista previa en vivo) */
+    showPreview(el) {
+      const box = this.container.querySelector('.grid-notation-box');
+      const target = box && box.querySelector('.notation-preview');
+      if (!el || !target) return;
+
+      const cat = window.CATEGORY_META[el.category] || { color: '#0284c7', name: el.categoryName };
+      const toC = k => (k ? this.formatNum(k - 273.15, ' °C', 0) : '—');
+
+      target.innerHTML = `
+        <div class="np-tile" style="--np-color:${cat.color};">
+          <span class="np-num">${el.number}</span>
+          <span class="np-symbol">${el.symbol}</span>
+          <span class="np-mass">${this.formatNum(el.mass)}</span>
+        </div>
+        <div class="np-info">
+          <div class="np-head">
+            <span class="np-name">${el.name}</span>
+            <span class="np-cat" style="--np-color:${cat.color};">${el.categoryName || cat.name}</span>
+          </div>
+          <div class="np-config">${this.formatConfigSuperScript(el.electronConfigurationSemantic)}</div>
+          <dl class="np-stats">
+            <div><dt>Estado</dt><dd>${this.getPhaseLabel(el)}</dd></div>
+            <div><dt>Electronegatividad</dt><dd>${this.formatNum(el.electronegativity)}</dd></div>
+            <div><dt>Oxidación</dt><dd>${(el.oxidationStates || []).join(', ') || '—'}</dd></div>
+            <div><dt>Densidad</dt><dd>${this.formatNum(el.density, ' g/cm³')}</dd></div>
+            <div class="np-extra"><dt>Fusión</dt><dd>${toC(el.meltingPoint)}</dd></div>
+            <div class="np-extra"><dt>Ebullición</dt><dd>${toC(el.boilingPoint)}</dd></div>
+            <div class="np-extra"><dt>Grupo · Periodo</dt><dd>${el.group || '—'} · ${el.period} (bloque ${el.block})</dd></div>
+            <div class="np-extra"><dt>Descubierto</dt><dd>${el.discoveryYear || '—'}</dd></div>
+          </dl>
+          <div class="np-cta">Clic o Enter para la ficha completa ➔</div>
+        </div>
+      `;
+      box.classList.add('is-previewing');
+    }
+
+    resetPreview() {
+      const box = this.container.querySelector('.grid-notation-box');
+      if (box) box.classList.remove('is-previewing');
+    }
+
+    /** Resalta una categoría (al pasar sobre la leyenda) sin cambiar el filtro */
+    highlightCategory(category) {
+      this.container.classList.toggle('is-cat-highlighting', !!category);
+      this.container.querySelectorAll('.element-cell').forEach(c => {
+        c.classList.toggle('cat-hot', !!category && c.dataset.category === category);
+      });
+    }
+
+    setHotHeaders(group, period) {
+      this.container.querySelectorAll('.grid-header-col.is-hot, .grid-header-row.is-hot')
+        .forEach(h => h.classList.remove('is-hot'));
+      if (group) {
+        const col = this.container.querySelector(`.grid-header-col[data-group="${group}"]`);
+        if (col) col.classList.add('is-hot');
+      }
+      if (period) {
+        const row = this.container.querySelector(`.grid-header-row[data-period="${period}"]`);
+        if (row) row.classList.add('is-hot');
+      }
+    }
+
+    trackCell(cell) {
+      this.showPreview(window.getElementByNumber(cell.dataset.number));
+      // Lantánidos/actínidos (filas 8-9) no tienen encabezado de grupo propio
+      const inMainGrid = parseInt(cell.dataset.r, 10) <= 7;
+      this.setHotHeaders(inMainGrid ? cell.dataset.group : null, cell.dataset.period);
+    }
+
     setupHeaderInteractions() {
+      const canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+
       this.container.addEventListener('mouseover', (e) => {
         const colHeader = e.target.closest('.grid-header-col');
         if (colHeader) {
@@ -406,6 +521,12 @@
           const period = rowHeader.getAttribute('data-period');
           this.container.querySelectorAll(`.element-cell[data-period="${period}"]`).forEach(c => c.classList.add('highlight-row'));
         }
+
+        const cell = e.target.closest('.element-cell');
+        if (cell && canHover && cell !== this.hoveredCell) {
+          this.hoveredCell = cell;
+          this.trackCell(cell);
+        }
       });
 
       this.container.addEventListener('mouseout', (e) => {
@@ -413,6 +534,26 @@
           this.container.querySelectorAll('.element-cell').forEach(c => {
             c.classList.remove('highlight-column', 'highlight-row');
           });
+        }
+      });
+
+      // Al salir de la tabla vuelve la leyenda de notación
+      this.container.addEventListener('mouseleave', () => {
+        this.hoveredCell = null;
+        this.resetPreview();
+        this.setHotHeaders(null, null);
+      });
+
+      // Teclado: la vista previa sigue al foco
+      this.container.addEventListener('focusin', (e) => {
+        const cell = e.target.closest('.element-cell');
+        if (cell) this.trackCell(cell);
+      });
+
+      this.container.addEventListener('focusout', (e) => {
+        if (!this.container.contains(e.relatedTarget) && !this.hoveredCell) {
+          this.resetPreview();
+          this.setHotHeaders(null, null);
         }
       });
     }

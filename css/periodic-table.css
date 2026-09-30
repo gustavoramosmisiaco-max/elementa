@@ -512,6 +512,175 @@
 }
 
 /* ==========================================================================
+   INTERACTIVIDAD: vista previa en vivo, encabezados activos y resaltados
+   ========================================================================== */
+
+/* El recuadro central alterna entre la leyenda y la ficha rápida del elemento */
+.notation-preview {
+  display: none;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  gap: clamp(8px, 1.4cqi, 20px);
+  animation: previewIn 0.18s ease;
+}
+
+.grid-notation-box.is-previewing .notation-preview {
+  display: flex;
+}
+
+.grid-notation-box.is-previewing .notation-card-wrapper {
+  display: none;
+}
+
+.grid-notation-box.is-previewing {
+  border-color: var(--accent-cyan);
+}
+
+@keyframes previewIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.np-tile {
+  flex-shrink: 0;
+  height: 100%;
+  max-height: 150px;
+  aspect-ratio: 1 / 1.1;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--np-color);
+  background: color-mix(in srgb, var(--np-color) 22%, var(--bg-surface));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(3px, 0.5cqi, 8px);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--np-color) 45%, transparent);
+}
+
+.np-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: clamp(8px, 1cqi, 15px);
+}
+
+.np-symbol {
+  text-align: center;
+  font-weight: 900;
+  line-height: 1;
+  font-size: clamp(18px, 3.6cqi, 52px);
+  color: var(--text-primary);
+}
+
+.np-mass {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(7px, 0.8cqi, 12px);
+  color: var(--text-secondary);
+}
+
+.np-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.4cqi, 6px);
+}
+
+.np-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.np-name {
+  font-weight: 900;
+  font-size: clamp(12px, 1.55cqi, 24px);
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.np-cat {
+  font-size: clamp(8px, 0.72cqi, 11px);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--np-color) 25%, transparent);
+  border: 1px solid var(--np-color);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.np-config {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(8px, 0.8cqi, 12px);
+  color: var(--text-secondary);
+}
+
+.np-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(2px, 0.35cqi, 5px) clamp(4px, 0.8cqi, 12px);
+  margin: 0;
+}
+
+.np-stats dt {
+  font-size: clamp(6px, 0.6cqi, 9.5px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-stats dd {
+  margin: 0;
+  font-size: clamp(8px, 0.82cqi, 12.5px);
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-cta {
+  font-size: clamp(7px, 0.68cqi, 10.5px);
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+/* Encabezados de grupo/periodo del elemento señalado */
+.grid-header-col.is-hot,
+.grid-header-row.is-hot {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #fff;
+}
+
+.grid-header-col.is-hot .roman-num {
+  color: #fff;
+}
+
+/* Resaltado de una familia al pasar sobre la leyenda */
+.is-cat-highlighting .element-cell:not(.cat-hot) {
+  opacity: 0.18;
+  filter: grayscale(70%);
+}
+
+.is-cat-highlighting .element-cell.cat-hot {
+  border-color: var(--elem-accent);
+  box-shadow: 0 0 10px var(--elem-accent);
+}
+
+/* Foco de teclado bien visible */
+.element-cell:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 1px;
+}
+
+/* ==========================================================================
    NIVELES DE DETALLE ADAPTATIVOS (según el ancho real disponible para la tabla)
    ========================================================================== */
 
@@ -643,4 +812,18 @@
   .element-cell:focus-visible {
     transform: none;
   }
+}
+
+/* Vista previa: menos datos cuando el recuadro central es más pequeño */
+@container ptable (max-width: 1199px) {
+  .np-extra { display: none; }
+  .np-stats dd { font-size: clamp(7px, 1cqi, 12px); }
+  .np-stats dt { font-size: clamp(6px, 0.75cqi, 9px); }
+}
+
+@container ptable (max-width: 759px) {
+  .np-stats, .np-cta { display: none; }
+  .np-name { font-size: clamp(11px, 2.4cqi, 18px); }
+  .np-config, .np-cat { font-size: clamp(7px, 1.4cqi, 11px); }
+  .np-symbol { font-size: clamp(16px, 5cqi, 36px); }
 }

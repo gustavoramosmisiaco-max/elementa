@@ -29,12 +29,15 @@
         this.tableRenderer = new window.TableRenderer(tableContainer, {
           onElementClick: (el) => {
             if (window.ElementModal) window.ElementModal.show(el);
-          }
+          },
+          onRender: (matched) => this.updateFilterStatus(matched)
         });
       }
 
       this.setupNavigation();
       this.setupSearchAndFilters();
+      this.setupFiltersPanel();
+      this.setupKeyboardShortcuts();
       this.setupThemeToggle();
       this.setupTemperatureSlider();
       this.setupHeatmapControls();
@@ -63,6 +66,7 @@
 
           this.currentView = targetView;
           this.handleViewActivation(targetView);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       });
     }
@@ -112,6 +116,29 @@
         searchInput.addEventListener('input', (e) => {
           this.tableRenderer.setSearch(e.target.value);
         });
+
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            // Abre la ficha del mejor resultado (coincidencia exacta de símbolo/número primero)
+            const q = searchInput.value.trim().toLowerCase();
+            const matches = this.tableRenderer.matchedElements || [];
+            if (!q || !matches.length) return;
+            const best = matches.find(el => el.symbol.toLowerCase() === q || String(el.number) === q) || matches[0];
+            searchInput.blur();
+            if (window.ElementModal) window.ElementModal.show(best);
+          } else if (e.key === 'Escape') {
+            this.clearSearch();
+            searchInput.blur();
+          }
+        });
+      }
+
+      const clearBtn = document.getElementById('btnClearSearch');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          this.clearSearch();
+          if (searchInput) searchInput.focus();
+        });
       }
 
       // Block filters
@@ -129,6 +156,88 @@
           this.tableRenderer.setFilter('type', e.target.value);
         });
       }
+    }
+
+    clearSearch() {
+      const searchInput = document.getElementById('globalSearchInput');
+      if (searchInput) searchInput.value = '';
+      if (this.tableRenderer) this.tableRenderer.setSearch('');
+    }
+
+    /** Contador de resultados, botón ✕ de la búsqueda y número de filtros activos */
+    updateFilterStatus(matched) {
+      const r = this.tableRenderer;
+      if (!r) return;
+      const total = (window.ELEMENTS_DATA || []).length;
+      const activeFilters = [r.activeCategoryFilter, r.activeBlockFilter, r.activeTypeFilter]
+        .filter(v => v && v !== 'all').length;
+      const narrowed = !!r.searchQuery || activeFilters > 0;
+
+      const count = document.getElementById('searchResultCount');
+      if (count) {
+        count.textContent = narrowed ? `${matched.length} de ${total}` : '';
+        count.classList.toggle('is-empty', narrowed && matched.length === 0);
+      }
+
+      const wrapper = document.querySelector('.search-box-wrapper');
+      if (wrapper) wrapper.classList.toggle('has-value', !!r.searchQuery);
+
+      const badge = document.getElementById('filtersActiveBadge');
+      if (badge) badge.textContent = activeFilters ? activeFilters : '';
+
+      const resetBtn = document.getElementById('btnResetFilters');
+      if (resetBtn) resetBtn.disabled = !narrowed;
+    }
+
+    setupFiltersPanel() {
+      const toggleBtn = document.getElementById('btnToggleFilters');
+      const panel = document.getElementById('filtersPanel');
+      if (toggleBtn && panel) {
+        toggleBtn.addEventListener('click', () => {
+          const open = panel.classList.toggle('is-open');
+          toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          toggleBtn.classList.toggle('active', open);
+        });
+      }
+
+      const resetBtn = document.getElementById('btnResetFilters');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          const blockSelect = document.getElementById('blockFilterSelect');
+          const typeSelect = document.getElementById('typeFilterSelect');
+          if (blockSelect) blockSelect.value = 'all';
+          if (typeSelect) typeSelect.value = 'all';
+          document.querySelectorAll('.cat-pill').forEach(p => {
+            p.classList.toggle('active', p.getAttribute('data-category') === 'all');
+          });
+          const searchInput = document.getElementById('globalSearchInput');
+          if (searchInput) searchInput.value = '';
+
+          if (this.tableRenderer) {
+            this.tableRenderer.activeBlockFilter = 'all';
+            this.tableRenderer.activeTypeFilter = 'all';
+            this.tableRenderer.activeCategoryFilter = 'all';
+            this.tableRenderer.setSearch('');
+          }
+        });
+      }
+    }
+
+    setupKeyboardShortcuts() {
+      window.addEventListener('keydown', (e) => {
+        const tag = (e.target.tagName || '').toLowerCase();
+        const typing = tag === 'input' || tag === 'select' || tag === 'textarea' || e.target.isContentEditable;
+        const modalOpen = !!document.querySelector('.modal-overlay') &&
+          document.querySelector('.modal-overlay').style.display !== 'none';
+        if (typing || modalOpen || this.currentView !== 'view-table') return;
+
+        // "/" enfoca el buscador
+        if (e.key === '/') {
+          e.preventDefault();
+          const searchInput = document.getElementById('globalSearchInput');
+          if (searchInput) searchInput.focus();
+        }
+      });
     }
 
     setupCategoryPills() {
@@ -151,6 +260,15 @@
 
       const pills = pillContainer.querySelectorAll('.cat-pill');
       pills.forEach(pill => {
+        // Vista previa: al pasar sobre la leyenda se iluminan esos elementos en la tabla
+        pill.addEventListener('mouseenter', () => {
+          const cat = pill.getAttribute('data-category');
+          if (this.tableRenderer) this.tableRenderer.highlightCategory(cat === 'all' ? null : cat);
+        });
+        pill.addEventListener('mouseleave', () => {
+          if (this.tableRenderer) this.tableRenderer.highlightCategory(null);
+        });
+
         pill.addEventListener('click', () => {
           pills.forEach(p => p.classList.remove('active'));
           pill.classList.add('active');

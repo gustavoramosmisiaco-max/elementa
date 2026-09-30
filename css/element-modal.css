@@ -450,3 +450,86 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Celular: la ficha ocupa toda la pantalla y se lee como una app */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-dialog {
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .modal-header {
+    padding: 10px 12px;
+    gap: 8px;
+    align-items: flex-start;
+    touch-action: pan-y;
+  }
+
+  .modal-identity {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .modal-elem-badge {
+    width: 52px;
+    height: 58px;
+  }
+
+  .modal-elem-badge .badge-sym {
+    font-size: 21px;
+  }
+
+  .modal-element-title {
+    font-size: 19px;
+  }
+
+  .modal-title-group {
+    min-width: 0;
+  }
+
+  .modal-title-group .icon-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .meta-tag {
+    font-size: 10px;
+  }
+
+  .modal-nav-controls {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .modal-nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .modal-tabs {
+    padding: 6px 8px;
+    scrollbar-width: none;
+  }
+
+  .modal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .modal-tab {
+    padding: 8px 10px;
+    font-size: 12.5px;
+  }
+
+  .modal-body {
+    padding: 14px 12px calc(24px + env(safe-area-inset-bottom));
+  }
+}
