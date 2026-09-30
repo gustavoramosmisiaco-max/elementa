@@ -151,6 +151,11 @@
       while (this.atomGroup.children.length > 0) {
         const obj = this.atomGroup.children[0];
         this.atomGroup.remove(obj);
+        // Libera memoria de la GPU (geometrías y materiales/shaders del átomo anterior)
+        obj.traverse(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) child.material.dispose();
+        });
       }
       this.shells = [];
       this.electrons = [];
@@ -201,17 +206,51 @@
         nucleusGroup.add(sphere);
       }
 
-      // Outer glow for nucleus
-      const glowGeo = new THREE.SphereGeometry(nucleusRadius * 1.3, 24, 24);
-      const glowMat = new THREE.MeshBasicMaterial({
-        color: 0xff6b6b,
-        transparent: true,
-        opacity: 0.25,
-        wireframe: false
-      });
-      nucleusGroup.add(new THREE.Mesh(glowGeo, glowMat));
+      this.buildNucleusGlow(element, nucleusGroup, nucleusRadius);
 
       this.atomGroup.add(nucleusGroup);
+    }
+
+    /** Brillo de energía animado del núcleo (shaders GLSL en js/shaders/nucleus-shaders.js) */
+    buildNucleusGlow(element, nucleusGroup, nucleusRadius) {
+      this.nucleusUniforms = [];
+
+      if (!window.NucleusShaders) {
+        // Respaldo sin shaders: halo plano como antes
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0xff6b6b, transparent: true, opacity: 0.25 });
+        nucleusGroup.add(new THREE.Mesh(new THREE.SphereGeometry(nucleusRadius * 1.3, 24, 24), glowMat));
+        return;
+      }
+
+      const catMeta = (window.CATEGORY_META || {})[element.category] || { color: '#ff6b6b' };
+      const n = element.number;
+      const isRadioactive = n >= 84 || n === 43 || n === 61;
+
+      const makeLayer = (radius, isHalo, intensity) => {
+        const uniforms = {
+          uTime: { value: 0 },
+          uColor: { value: new THREE.Color(catMeta.color) },
+          uIntensity: { value: intensity },
+          uPulseSpeed: { value: isRadioactive ? 5.5 : 2.2 },
+          uIsHalo: { value: isHalo ? 1.0 : 0.0 }
+        };
+        const material = new THREE.ShaderMaterial({
+          uniforms,
+          vertexShader: window.NucleusShaders.vertexShader,
+          fragmentShader: window.NucleusShaders.fragmentShader,
+          transparent: true,
+          depthWrite: false,
+          side: isHalo ? THREE.BackSide : THREE.FrontSide
+        });
+        this.nucleusUniforms.push(uniforms);
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 48), material);
+        mesh.renderOrder = isHalo ? 1 : 2;
+        return mesh;
+      };
+
+      // Corona exterior + capa de energía sobre los nucleones
+      nucleusGroup.add(makeLayer(nucleusRadius * 2.1, true, isRadioactive ? 1.25 : 1.0));
+      nucleusGroup.add(makeLayer(nucleusRadius * 1.35, false, isRadioactive ? 1.3 : 1.0));
     }
 
     buildOrbits(element) {
@@ -272,7 +311,12 @@
     }
 
     animate() {
+      const startTime = performance.now();
       const loop = () => {
+        // Avanza la animación del shader del núcleo
+        const t = (performance.now() - startTime) / 1000;
+        (this.nucleusUniforms || []).forEach(u => { u.uTime.value = t; });
+
         if (this.options.autoRotate && !this.isMouseDown && this.atomGroup) {
           this.atomGroup.rotation.y += this.options.rotationSpeed;
         }
