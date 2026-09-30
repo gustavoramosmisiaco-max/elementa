@@ -97,6 +97,11 @@
         if (!this.equationBalancer && container && typeof window.ChemicalEquationBalancer !== 'undefined') {
           this.equationBalancer = new window.ChemicalEquationBalancer(container);
         }
+      } else if (viewId === 'view-compounds') {
+        const container = document.getElementById('compoundToolContainer');
+        if (!this.compoundBuilder && container && typeof window.CompoundBuilder !== 'undefined') {
+          this.compoundBuilder = new window.CompoundBuilder(container);
+        }
       } else if (viewId === 'view-comparator') {
         const container = document.getElementById('comparatorToolContainer');
         if (!this.elementComparator && container && typeof window.ElementComparator !== 'undefined') {

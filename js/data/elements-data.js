@@ -428,7 +428,7 @@
     "covalentRadius": 76,
     "electronegativity": 2.55,
     "ionizationEnergy": 1086.5,
-    "electronAffinity": 153.9,
+    "electronAffinity": 121.8,
     "spectralLines": [
       247.9,
       193.1
@@ -1105,7 +1105,7 @@
     ],
     "discoveredBy": "Conocido desde la Antigüedad",
     "discoveryYear": "Antigüedad",
-    "description": "Sólido cristalino amarillo brillante que compone aminoácidos esenciales como la cisteína y metionina (puentes disulfuro en proteínas). El ácido sulfúrico es el compuesto químico más producido en el mundo.",
+    "description": "Sólido cristalino amarillo brillante que compone aminoácidos esenciales como la cisteína y metionina (puentes disulfuro en proteínas). El ácido sulfúrico es uno de los compuestos químicos industriales más producidos del mundo.",
     "summary": "Sólido amarillo aromático básico para el ácido sulfúrico y la vulcanización.",
     "uses": [
       "Fabricación de ácido sulfúrico industrial (H₂SO₄)",
@@ -3599,7 +3599,7 @@
     "covalentRadius": 142,
     "electronegativity": 1.78,
     "ionizationEnergy": 558.3,
-    "electronAffinity": 38.9,
+    "electronAffinity": 37,
     "spectralLines": [
       410.2,
       451.1
@@ -5361,7 +5361,7 @@
     ],
     "discoveredBy": "Georges Urbain y Carl Auer von Welsbach",
     "discoveryYear": 1907,
-    "description": "El último, más pesado, denso y duro de los lantánidos. El isótopo Lutecio-177 acoplado a anticuerpos monoclonales es la punta de lanza de la terapia de medicina nuclear contra el cáncer de próstata.",
+    "description": "El último, más pesado, denso y duro de los lantánidos. El isótopo Lutecio-177, unido a moléculas que se dirigen al tumor (como el PSMA-617), es un tratamiento de medicina nuclear de vanguardia contra el cáncer de próstata avanzado.",
     "summary": "El lantánido más denso; su isótopo Lu-177 destruye células cancerígenas con precisión.",
     "uses": [
       "Radioterapia dirigida con Lutecio-177 (Pluvicto) contra el cáncer de próstata metastásico",
@@ -5428,7 +5428,7 @@
     ],
     "discoveredBy": "Dirk Coster y George de Hevesy",
     "discoveryYear": 1923,
-    "description": "Metal lustroso que absorbe neutrones de forma excepcional. El dióxido de hafnio (HfO₂) sustituyó al silicio como aislante dieléctrico de alta constante k en los transistores de microprocesadores modernos.",
+    "description": "Metal lustroso que absorbe neutrones de forma excepcional. El dióxido de hafnio (HfO₂) sustituyó al dióxido de silicio (SiO₂) como aislante dieléctrico de alta constante k en los transistores de los microprocesadores modernos.",
     "summary": "Metal absorbente de neutrones e innovador dieléctrico high-k en microchips.",
     "uses": [
       "Dieléctrico de puerta 'high-k' de HfO₂ en microprocesadores de última generación",
@@ -5587,7 +5587,7 @@
     ],
     "discoveredBy": "Hermanos Juan José y Fausto Delhuyar",
     "discoveryYear": 1783,
-    "description": "El metal con el punto de fusión más alto de todos los elementos (3422 °C) y la menor presión de vapor. El carburo de wolframio es casi tan duro como el diamante.",
+    "description": "El metal con el punto de fusión más alto de todos los metales (3422 °C) y la menor presión de vapor. El carburo de wolframio es casi tan duro como el diamante.",
     "summary": "Metal con el punto de fusión más alto del universo de elementos.",
     "uses": [
       "Herramientas de corte y brocas mineras de carburo de wolframio",
@@ -6427,7 +6427,7 @@
     "atomicRadius": 145,
     "covalentRadius": 150,
     "electronegativity": 2.2,
-    "ionizationEnergy": 890,
+    "ionizationEnergy": 899,
     "electronAffinity": 270.1,
     "spectralLines": [
       224.4,
@@ -6616,7 +6616,7 @@
       2
     ],
     "phase": "solid",
-    "meltingPoint": 1233,
+    "meltingPoint": 973,
     "boilingPoint": 2010,
     "density": 5.5,
     "atomicRadius": 283,
@@ -7119,7 +7119,7 @@
     "density": 12,
     "atomicRadius": 173,
     "covalentRadius": 180,
-    "electronegativity": 1.13,
+    "electronegativity": 1.3,
     "ionizationEnergy": 578,
     "electronAffinity": 9.9,
     "spectralLines": [
@@ -7189,7 +7189,7 @@
     "density": 13.51,
     "atomicRadius": 174,
     "covalentRadius": 169,
-    "electronegativity": 1.28,
+    "electronegativity": 1.3,
     "ionizationEnergy": 581,
     "electronAffinity": 27.2,
     "spectralLines": [
@@ -7198,7 +7198,7 @@
     ],
     "discoveredBy": "Glenn T. Seaborg, Ralph A. James y Albert Ghiorso",
     "discoveryYear": 1944,
-    "description": "Nombrado en honor a Marie y Pierre Curie. Es un emisor alfa tan potente que brilla con fluorescencia púrpura en la oscuridad y sus muestras sólidas se calientan solas. Alimentó los espectrómetros APXS en Marte.",
+    "description": "Nombrado en honor a Marie y Pierre Curie. Es un emisor alfa tan potente que sus muestras sólidas se calientan solas por su propia radiactividad. El Curio-244 alimentó los espectrómetros de rayos X y partículas alfa (APXS) de los rovers en Marte.",
     "summary": "Nombrado por los Curie; analizó las rocas de Marte con espectrómetros APXS.",
     "uses": [
       "Espectrómetros de rayos X de partículas alfa (APXS) en misiones a Marte (Pathfinder, Spirit, Opportunity)",

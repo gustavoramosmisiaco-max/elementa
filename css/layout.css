@@ -289,7 +289,7 @@
     bottom: 0;
     z-index: 900;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 0;
     padding: 4px 2px calc(4px + env(safe-area-inset-bottom));
     border-radius: 0;
@@ -307,13 +307,20 @@
     gap: 1px;
     padding: 5px 2px;
     border-radius: var(--radius-md);
-    font-size: 10.5px;
+    font-size: 9.5px;
     min-width: 0;
   }
 
   .nav-tab-btn .nav-icon {
     font-size: 19px;
     line-height: 1.1;
+  }
+
+  .nav-tab-btn .nav-label-short {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.2px;
   }
 
   .nav-tab-btn.active {
