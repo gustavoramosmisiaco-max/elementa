@@ -431,3 +431,17 @@ code, kbd, samp, pre {
     max-width: 100%;
   }
 }
+
+@media (max-width: 600px) {
+  .app-header,
+  .controls-bar-section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .main-content-viewport {
+    padding: 12px 6px 40px 6px;
+  }
+  .search-box-wrapper {
+    min-width: 0;
+  }
+}

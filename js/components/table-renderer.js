@@ -207,7 +207,8 @@
         <div class="grid-cell-placeholder" data-series="lanthanide" style="grid-column:4; grid-row:7;" title="Lantánidos (57-71)">
           <span class="placeholder-range">57-71</span>
           <span class="placeholder-label">La - Lu</span>
-          <span style="font-size:9px;color:var(--text-muted);margin-top:2px;">Lantánidos</span>
+          <span class="placeholder-series">Lantánidos</span>
+          <span class="placeholder-short">*</span>
         </div>
       `;
 
@@ -216,7 +217,8 @@
         <div class="grid-cell-placeholder" data-series="actinide" style="grid-column:4; grid-row:8;" title="Actínidos (89-103)">
           <span class="placeholder-range">89-103</span>
           <span class="placeholder-label">Ac - Lr</span>
-          <span style="font-size:9px;color:var(--text-muted);margin-top:2px;">Actínidos</span>
+          <span class="placeholder-series">Actínidos</span>
+          <span class="placeholder-short">**</span>
         </div>
       `;
 
@@ -233,25 +235,22 @@
       html += '</div>'; // End periodic grid
 
       // 8. Detached Bottom Rows (Lantánidos 57-71 & Actínidos 89-103)
+      // Same column template as the main grid, so cells stay aligned with Groups 3-17 at any width
       html += '<div class="periodic-detached-wrapper">';
 
       // 8a. Lanthanides (57-71)
-      html += '<div class="detached-row">';
-      html += '<div class="detached-vertical-label">Lantánidos</div>';
+      html += '<div class="detached-label" style="grid-column:2 / 4; grid-row:1;"><span class="detached-label-full">Lantánidos</span><span class="detached-label-short">*</span></div>';
       for (let num = 57; num <= 71; num++) {
         const el = window.getElementByNumber(num);
-        if (el) html += this.renderElementCell(el, '');
+        if (el) html += this.renderElementCell(el, `grid-column:${num - 57 + 4}; grid-row:1;`);
       }
-      html += '</div>';
 
       // 8b. Actinides (89-103)
-      html += '<div class="detached-row">';
-      html += '<div class="detached-vertical-label">Actínidos</div>';
+      html += '<div class="detached-label" style="grid-column:2 / 4; grid-row:2;"><span class="detached-label-full">Actínidos</span><span class="detached-label-short">**</span></div>';
       for (let num = 89; num <= 103; num++) {
         const el = window.getElementByNumber(num);
-        if (el) html += this.renderElementCell(el, '');
+        if (el) html += this.renderElementCell(el, `grid-column:${num - 89 + 4}; grid-row:2;`);
       }
-      html += '</div>';
 
       html += '</div>'; // End detached wrapper
 
@@ -273,17 +272,17 @@
             </div>
 
             <div class="notation-diagram">
-              <div style="display:flex;justify-content:space-between;font-size:11px;font-family:monospace;">
+              <div class="nd-top">
                 <strong>1</strong>
                 <span>1,00795</span>
               </div>
-              <div style="display:grid;grid-template-columns:20px 1fr 20px;align-items:center;margin:2px 0;">
-                <span style="font-size:10px;font-weight:700;color:var(--text-muted);">2,1</span>
-                <span style="font-size:26px;font-weight:900;text-align:center;">H</span>
-                <span style="font-size:10px;font-weight:700;text-align:right;">1</span>
+              <div class="nd-mid">
+                <span class="nd-en">2,1</span>
+                <span class="nd-symbol">H</span>
+                <span class="nd-ox">1</span>
               </div>
-              <div style="font-size:9.5px;text-align:center;font-family:monospace;color:var(--text-muted);">1s¹</div>
-              <div style="font-size:11px;font-weight:800;text-align:center;">Hidrógeno</div>
+              <div class="nd-config">1s¹</div>
+              <div class="nd-name">Hidrógeno</div>
             </div>
 
             <div class="notation-labels-right">
