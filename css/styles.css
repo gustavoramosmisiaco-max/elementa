@@ -445,3 +445,10 @@ code, kbd, samp, pre {
     min-width: 0;
   }
 }
+
+/* Celulares en horizontal: la cabecera fija taparía media pantalla */
+@media (max-height: 560px) {
+  .app-header {
+    position: static;
+  }
+}
