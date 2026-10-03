@@ -44,7 +44,22 @@ module.exports = function testOrganic(Org, check) {
     [{ fn: 'acido', n: 4 }, 'ácido butanoico', 'ácido butírico', 'C4H8O2'],
     [{ fn: 'amina', n: 1, pos: 1 }, 'metanamina', 'metilamina', 'CH5N', 'CH3NH2'],
     [{ fn: 'amina', n: 2, pos: 2 }, 'etanamina', 'etilamina', 'C2H7N'],
-    [{ fn: 'amina', n: 3, pos: 3 }, 'propan-1-amina', 'propilamina', 'C3H9N', 'CH3–CH2–CH2NH2']
+    [{ fn: 'amina', n: 3, pos: 3 }, 'propan-1-amina', 'propilamina', 'C3H9N', 'CH3–CH2–CH2NH2'],
+    [{ fn: 'amida', n: 1 }, 'metanamida', 'formamida', 'CH3NO', 'HCONH2'],
+    [{ fn: 'amida', n: 2 }, 'etanamida', 'acetamida', 'C2H5NO', 'CH3–CONH2'],
+    [{ fn: 'amida', n: 4, subs: [{ type: 'metil', pos: 3 }] }, '3-metilbutanamida', null, 'C5H11NO', 'CH3–CH(CH3)–CH2–CONH2'],
+    [{ fn: 'nitrilo', n: 1 }, 'metanonitrilo', 'cianuro de hidrógeno (ácido cianhídrico)', 'CHN', 'HCN'],
+    [{ fn: 'nitrilo', n: 2 }, 'etanonitrilo', 'acetonitrilo', 'C2H3N', 'CH3–CN'],
+    [{ fn: 'eter', n: 1, m: 1 }, 'metoximetano', 'dimetil éter', 'C2H6O', 'CH3–O–CH3'],
+    [{ fn: 'eter', n: 2, m: 2 }, 'etoxietano', 'dietil éter (éter etílico)', 'C4H10O', 'CH3–CH2–O–CH2–CH3'],
+    [{ fn: 'eter', n: 2, m: 1 }, 'metoxietano', 'etil metil éter', 'C3H8O', 'CH3–O–CH2–CH3'],
+    [{ fn: 'eter', n: 1, m: 3 }, '1-metoxipropano', 'metil propil éter', 'C4H10O', 'CH3–O–CH2–CH2–CH3'],
+    [{ fn: 'eter', n: 5, m: 5 }, '1-pentiloxipentano', 'dipentil éter', 'C10H22O'],
+    [{ fn: 'ester', n: 2, m: 1 }, 'etanoato de metilo', 'acetato de metilo', 'C3H6O2', 'CH3–COO–CH3'],
+    [{ fn: 'ester', n: 2, m: 2 }, 'etanoato de etilo', 'acetato de etilo', 'C4H8O2', 'CH3–COO–CH2–CH3'],
+    [{ fn: 'ester', n: 1, m: 1 }, 'metanoato de metilo', 'formiato de metilo', 'C2H4O2', 'HCOO–CH3'],
+    [{ fn: 'ester', n: 5, m: 5 }, 'pentanoato de pentilo', 'valerato de pentilo', 'C10H20O2'],
+    [{ fn: 'ester', n: 8, m: 2 }, 'octanoato de etilo', null, 'C10H20O2']
   ];
 
   CASES.forEach(([input, name, common, formula, condensed]) => {
@@ -76,7 +91,7 @@ module.exports = function testOrganic(Org, check) {
 
   // Barrido: todas las cadenas y posiciones sin sustituyentes producen resultados coherentes
   let sweep = 0;
-  Object.keys(Org.FUNCS).forEach(fn => {
+  Object.keys(Org.FUNCS).filter(fn => !Org.FUNCS[fn].twoChains).forEach(fn => {
     for (let n = 1; n <= Org.MAX_C; n++) {
       const range = Org.positionRange(fn, n) || [1, 1];
       for (let p = range[0]; p <= range[1]; p++) {
@@ -89,5 +104,17 @@ module.exports = function testOrganic(Org, check) {
       }
     }
   });
+  ['eter', 'ester'].forEach(fn => {
+    for (let n = 1; n <= (fn === 'eter' ? Org.MAX_SIDE : Org.MAX_C); n++) {
+      for (let m = 1; m <= Org.MAX_SIDE; m++) {
+        const r = Org.build({ fn, n, m });
+        sweep++;
+        if (!r.ok || /undefined|NaN/.test(r.name + r.formula + r.condensed + r.commonName) || !(r.molarMass > 0) || !r.drawing) {
+          check(`barrido ${fn} n=${n} m=${m}`, JSON.stringify(r).slice(0, 120), 'resultado válido');
+        }
+      }
+    }
+  });
+  check('éster con sustituyente rechazado', Org.build({ fn: 'ester', n: 2, m: 1, subs: [{ type: 'cloro', pos: 2 }] }).ok, false);
   console.log(`Estructuras orgánicas probadas en barrido: ${sweep}`);
 };

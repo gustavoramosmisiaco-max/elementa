@@ -534,7 +534,88 @@
 
 @media (max-width: 900px) {
   .molar-layout-grid, .comparator-results-grid, .quiz-options-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Celulares: nada se sale de la pantalla */
+.comparator-cards-container {
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+}
+
+.compare-element-card,
+.molar-table-container,
+.balancer-verification-box,
+.molar-steps-container {
+  min-width: 0;
+}
+
+.molar-table-container,
+.balancer-verification-box {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .tool-header h3 {
+    font-size: 19px;
+    line-height: 1.25;
+  }
+
+  .tool-desc {
+    font-size: 13px;
+  }
+
+  .tool-input-group {
+    padding: 14px;
+  }
+
+  .input-with-action {
+    flex-direction: column;
+  }
+
+  .input-with-action .btn-primary {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .molar-input,
+  .balancer-input {
+    font-size: 16px; /* evita el zoom automático de iOS */
+    min-width: 0;
+  }
+
+  .molar-table-container,
+  .molar-chart-container,
+  .balancer-verification-box,
+  .molar-steps-container {
+    padding: 14px;
+  }
+
+  .molar-table th,
+  .molar-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .molar-stat-number {
+    font-size: 30px;
+  }
+
+  .quiz-mode-pills {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .table3d-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .table3d-btn-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

@@ -20,7 +20,7 @@ Aplicación web educativa interactiva y moderna de los 118 elementos químicos, 
 - ⚖️ **Calculadora de Masa Molar**: Soporta paréntesis `Ca(OH)2`, hidratos `CuSO4·5H2O` y desglose porcentual con gráficos Donut.
 - ⚗️ **Balanceador de Ecuaciones Químicas**: Solucionador algebraico gaussiano de coeficientes estequiométricos con explicación paso a paso.
 - 🧪 **Formador de Compuestos Inorgánicos**: óxidos básicos y ácidos, hidróxidos, hidruros, hidrácidos, oxácidos, sales binarias y oxisales con su fórmula, las **tres nomenclaturas** (sistemática, Stock y tradicional), la reacción de formación balanceada y la masa molar.
-- 🧬 **Formador de Compuestos Orgánicos**: alcanos, alquenos, alquinos, alcoholes, aldehídos, cetonas, ácidos carboxílicos y aminas (1–10 carbonos) con sustituyentes; nombre IUPAC con numeración automática, nombre común, fórmula molecular, semidesarrollada y dibujo de esqueleto.
+- 🧬 **Formador de Compuestos Orgánicos**: alcanos, alquenos, alquinos, alcoholes, aldehídos, cetonas, ácidos carboxílicos, aminas, amidas y nitrilos (1–10 carbonos) con sustituyentes, además de éteres y ésteres con su reacción de obtención; nombre IUPAC con numeración automática, nombre común, fórmula molecular, semidesarrollada y dibujo de esqueleto.
 - ✅ **Datos verificados**: los valores de los 118 elementos se contrastaron con PubChem (NIH), NIST e IUPAC; las correcciones aplicadas están documentadas en `scripts/apply-verified-corrections.js`. Pruebas de nomenclatura: `node scripts/test-nomenclature.js`.
 - 🔍 **Comparador Multi-Elemento**: Compara hasta 4 elementos con gráfico Radar multivariable y radios a escala.
 - 🎯 **Modo Práctica / Quiz**: Cuestionario interactivo con puntuación y rachas para estudiantes.

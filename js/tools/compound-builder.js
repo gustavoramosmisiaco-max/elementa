@@ -31,7 +31,11 @@
     { label: 'Isobutano', fn: 'alcano', n: 3, subs: [{ type: 'metil', pos: 2 }] },
     { label: 'Cloroformo', fn: 'alcano', n: 1, subs: [{ type: 'cloro', pos: 1 }, { type: 'cloro', pos: 1 }, { type: 'cloro', pos: 1 }] },
     { label: 'Formol', fn: 'aldehido', n: 1, subs: [] },
-    { label: '2-metilbutan-2-ol', fn: 'alcohol', n: 4, pos: 2, subs: [{ type: 'metil', pos: 2 }] }
+    { label: '2-metilbutan-2-ol', fn: 'alcohol', n: 4, pos: 2, subs: [{ type: 'metil', pos: 2 }] },
+    { label: 'Acetato de etilo', fn: 'ester', n: 2, m: 2, subs: [] },
+    { label: 'Éter etílico', fn: 'eter', n: 2, m: 2, subs: [] },
+    { label: 'Acetamida', fn: 'amida', n: 2, subs: [] },
+    { label: 'Acetonitrilo', fn: 'nitrilo', n: 2, subs: [] }
   ];
 
   const ORG_POS_LABEL = {
@@ -102,18 +106,26 @@
                   <div class="cb-type-grid" id="cbFnGrid"></div>
                 </div>
                 <div class="cb-step">
-                  <span class="cb-step-label"><b>2</b> Carbonos en la cadena principal: <b class="cb-count" id="cbCarbonCount">3</b></span>
+                  <span class="cb-step-label"><b>2</b> <span id="cbChainLabel">Carbonos en la cadena principal</span>: <b class="cb-count" id="cbCarbonCount">3</b></span>
                   <div class="cb-stepper">
                     <button class="cb-stepper-btn" id="cbCarbonMinus" aria-label="Menos carbonos">−</button>
                     <input type="range" id="cbCarbonRange" min="1" max="10" value="3" aria-label="Número de carbonos" />
                     <button class="cb-stepper-btn" id="cbCarbonPlus" aria-label="Más carbonos">+</button>
                   </div>
                 </div>
+                <div class="cb-step" id="cbSecondStep" hidden>
+                  <span class="cb-step-label"><b>3</b> <span id="cbSecondLabel">Carbonos de la segunda cadena</span>: <b class="cb-count" id="cbSecondCount">1</b></span>
+                  <div class="cb-stepper">
+                    <button class="cb-stepper-btn" id="cbSecondMinus" aria-label="Menos carbonos">−</button>
+                    <input type="range" id="cbSecondRange" min="1" max="6" value="1" aria-label="Carbonos de la segunda cadena" />
+                    <button class="cb-stepper-btn" id="cbSecondPlus" aria-label="Más carbonos">+</button>
+                  </div>
+                </div>
                 <div class="cb-step" id="cbPosStep">
                   <span class="cb-step-label"><b>3</b> <span id="cbPosLabel">Posición</span></span>
                   <div class="cb-valence-row" id="cbPosButtons"></div>
                 </div>
-                <div class="cb-step">
+                <div class="cb-step" id="cbSubsStep">
                   <span class="cb-step-label"><b id="cbSubsNum">4</b> Sustituyentes (ramificaciones y halógenos)</span>
                   <div class="cb-subs-list" id="cbSubsList"></div>
                   <button class="pill-btn" id="cbAddSub">＋ Añadir sustituyente</button>
@@ -342,17 +354,28 @@
         this.org.fn = btn.dataset.fn;
         const min = O.FUNCS[this.org.fn].min;
         if (this.org.n < min) this.org.n = min;
+        this.org.n = Math.min(this.org.n, this.maxChain(this.org.fn));
+        if (O.FUNCS[this.org.fn].twoChains) this.org.subs = [];
         this.renderOrganic();
       });
 
       const range = this.container.querySelector('#cbCarbonRange');
       const setN = n => {
-        this.org.n = Math.max(1, Math.min(O.MAX_C, n));
+        this.org.n = Math.max(1, Math.min(this.maxChain(this.org.fn), n));
         this.renderOrganic();
       };
       range.addEventListener('input', () => setN(Number(range.value)));
       this.container.querySelector('#cbCarbonMinus').addEventListener('click', () => setN(this.org.n - 1));
       this.container.querySelector('#cbCarbonPlus').addEventListener('click', () => setN(this.org.n + 1));
+
+      const range2 = this.container.querySelector('#cbSecondRange');
+      const setM = m => {
+        this.org.m = Math.max(1, Math.min(O.MAX_SIDE, m));
+        this.renderOrganic();
+      };
+      range2.addEventListener('input', () => setM(Number(range2.value)));
+      this.container.querySelector('#cbSecondMinus').addEventListener('click', () => setM((this.org.m || 1) - 1));
+      this.container.querySelector('#cbSecondPlus').addEventListener('click', () => setM((this.org.m || 1) + 1));
 
       this.container.querySelector('#cbPosButtons').addEventListener('click', e => {
         const btn = e.target.closest('[data-pos]');
@@ -391,7 +414,7 @@
         const btn = e.target.closest('[data-ex]');
         if (!btn) return;
         const ex = ORG_EXAMPLES[Number(btn.dataset.ex)];
-        this.org = { fn: ex.fn, n: ex.n, pos: ex.pos ?? null, subs: ex.subs.map(x => ({ ...x })) };
+        this.org = { fn: ex.fn, n: ex.n, m: ex.m || 1, pos: ex.pos ?? null, subs: ex.subs.map(x => ({ ...x })) };
         this.renderOrganic(true);
       });
 
@@ -399,18 +422,18 @@
         const fns = Object.keys(O.FUNCS);
         for (let tries = 0; tries < 50; tries++) {
           const fn = fns[Math.floor(Math.random() * fns.length)];
-          const n = O.FUNCS[fn].min + Math.floor(Math.random() * (7 - O.FUNCS[fn].min + 1));
+          const n = O.FUNCS[fn].min + Math.floor(Math.random() * (Math.min(7, this.maxChain(fn)) - O.FUNCS[fn].min + 1));
           const pr = O.positionRange(fn, n);
           const pos = pr ? pr[0] + Math.floor(Math.random() * (pr[1] - pr[0] + 1)) : null;
           const subs = [];
-          const nSubs = Math.floor(Math.random() * 3);
+          const nSubs = O.FUNCS[fn].twoChains ? 0 : Math.floor(Math.random() * 3);
           const types = Object.keys(O.SUBS);
           for (let k = 0; k < nSubs; k++) {
             const type = types[Math.floor(Math.random() * types.length)];
             const r = O.subRange(type, { fn, n });
             if (r[0] <= r[1]) subs.push({ type, pos: r[0] + Math.floor(Math.random() * (r[1] - r[0] + 1)) });
           }
-          const candidate = { fn, n, pos, subs };
+          const candidate = { fn, n, m: 1 + Math.floor(Math.random() * 4), pos, subs };
           if (O.build(candidate).ok) {
             this.org = candidate;
             break;
@@ -428,13 +451,28 @@
       this.container.querySelectorAll('[data-fn]').forEach(b => b.classList.toggle('active', b.dataset.fn === s.fn));
       const range = this.container.querySelector('#cbCarbonRange');
       range.min = f.min;
+      range.max = this.maxChain(s.fn);
       range.value = s.n;
       this.container.querySelector('#cbCarbonCount').textContent = s.n;
+
+      // Éteres y ésteres: dos cadenas, sin posición ni sustituyentes
+      const two = !!f.twoChains;
+      s.m = s.m || 1;
+      this.container.querySelector('#cbSecondStep').hidden = !two;
+      this.container.querySelector('#cbSubsStep').hidden = two;
+      this.container.querySelector('#cbSecondRange').value = s.m;
+      this.container.querySelector('#cbSecondCount').textContent = s.m;
+      this.container.querySelector('#cbChainLabel').textContent = s.fn === 'ester'
+        ? 'Carbonos de la parte del ácido (incluye el C=O)'
+        : s.fn === 'eter' ? 'Carbonos de la cadena R' : 'Carbonos en la cadena principal';
+      this.container.querySelector('#cbSecondLabel').textContent = s.fn === 'ester'
+        ? 'Carbonos de la parte del alcohol (radical -ilo)'
+        : 'Carbonos de la cadena R′';
 
       // Posición del grupo / enlace
       const pr = O.positionRange(s.fn, s.n);
       const posStep = this.container.querySelector('#cbPosStep');
-      posStep.hidden = !pr;
+      posStep.hidden = !pr || two;
       this.container.querySelector('#cbSubsNum').textContent = pr ? '4' : '3';
       if (pr) {
         if (!(s.pos >= pr[0] && s.pos <= pr[1])) s.pos = pr[0];
@@ -474,7 +512,7 @@
 
       // Si la IUPAC exige numerar desde el otro extremo, la interfaz adopta la numeración correcta
       if (r.renumbered) {
-        this.org = { fn: r.spec.fn, n: r.spec.n, pos: r.spec.pos, subs: r.spec.subs.map(x => ({ ...x })) };
+        this.org = { fn: r.spec.fn, n: r.spec.n, m: s.m, pos: r.spec.pos, subs: r.spec.subs.map(x => ({ ...x })) };
         this.renderOrganic(scrollToResult);
         this.container.querySelector('#cbOrgResult .cb-renumber-note').hidden = false;
         return;
@@ -506,6 +544,7 @@
           <div class="cb-mini-card"><span>Masa molar</span><b>${fmtMass(r.molarMass)} g/mol</b></div>
           <div class="cb-mini-card"><span>Fórmula general</span><b>${r.general}</b></div>
         </div>
+        ${r.reactionHTML ? `<div class="cb-box"><h4>⚗️ Reacción de obtención</h4><div class="cb-reaction">${r.reactionHTML}</div></div>` : ''}
         <div class="cb-box">
           <h4>🧠 ¿Cómo se nombra?</h4>
           <ol class="cb-steps">${r.steps.map(st => `<li>${st}</li>`).join('')}</ol>
@@ -514,6 +553,7 @@
 
     /** Dibuja la fórmula de esqueleto en zigzag con numeración de carbonos */
     skeletonSVG(r) {
+      if (r.drawing) return this.linearChainSVG(r);
       const spec = r.spec;
       const n = spec.n;
       if (n === 1) {
@@ -582,17 +622,24 @@
 
       // Grupo funcional
       const idx = spec.pos != null ? spec.pos - 1 : null;
-      if (spec.fn === 'aldehido' || spec.fn === 'acido') {
+      if (spec.fn === 'nitrilo') {
+        const nAtom = outward(0);
+        line(pts[0], nAtom);
+        offsetLine(pts[0], nAtom, 6);
+        offsetLine(pts[0], nAtom, -6);
+        atom(nAtom, 'N', 'N');
+        used[0] = 1;
+      } else if (spec.fn === 'aldehido' || spec.fn === 'acido' || spec.fn === 'amida') {
         const p0 = pts[0];
         const o = { x: p0.x, y: p0.y + (p0.y === yUp ? -44 : 44) };
         line(p0, o);
         offsetLine(p0, o, 6);
         atom(o, 'O', 'O');
         used[0] = 2;
-        if (spec.fn === 'acido') {
+        if (spec.fn === 'acido' || spec.fn === 'amida') {
           const oh = outward(0);
           line(p0, oh);
-          atom(oh, 'OH', 'O');
+          atom(oh, spec.fn === 'acido' ? 'OH' : 'NH₂', spec.fn === 'acido' ? 'O' : 'N');
         } else {
           const h = outward(0);
           line(p0, h, 'cb-bond cb-bond-h');
@@ -636,6 +683,52 @@
         ${lines.join('')}${nums}${labels.join('')}
       </svg>
       <p class="cb-svg-legend">Cada vértice es un carbono (con los H que le faltan para 4 enlaces). Los números indican la numeración IUPAC.</p>`;
+    }
+
+    maxChain(fn) {
+      const O = window.OrganicChem;
+      return fn === 'eter' ? O.MAX_SIDE : O.MAX_C;
+    }
+
+    /** Éteres y ésteres: zigzag con el oxígeno como vértice y el C=O del éster */
+    linearChainSVG(r) {
+      const atoms = r.drawing;
+      const dx = 50;
+      const yUp = 80;
+      const yDown = 110;
+      const pad = 50;
+      const pts = atoms.map((_, k) => ({ x: pad + k * dx, y: k % 2 === 0 ? yDown : yUp }));
+      const width = pad * 2 + (atoms.length - 1) * dx;
+      const parts = [];
+      const line = (a, b) => parts.push(`<line class="cb-bond" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`);
+      const label = (p, text) => parts.push(
+        `<g class="cb-atom"><circle cx="${p.x}" cy="${p.y}" r="13"/><text x="${p.x}" y="${p.y + 5}" fill="${ATOM_COLORS.O}">${text}</text></g>`
+      );
+
+      if (atoms.length === 1) return `<div class="cb-single-carbon">${r.condensedHTML}</div>`;
+      for (let k = 0; k < atoms.length - 1; k++) line(pts[k], pts[k + 1]);
+
+      const labels = [];
+      atoms.forEach((a, k) => {
+        const p = pts[k];
+        if (a.carbonyl) {
+          const o = { x: p.x, y: p.y + (p.y === yUp ? -44 : 44) };
+          line(p, o);
+          parts.push(`<line class="cb-bond" x1="${p.x + 6}" y1="${p.y + (o.y - p.y) * 0.14}" x2="${o.x + 6}" y2="${o.y - (o.y - p.y) * 0.14}"/>`);
+          labels.push([o, 'O']);
+        }
+        if (a.label === 'O') labels.push([p, 'O']);
+      });
+      // Formiato: el H del grupo HCOO– se dibuja explícito
+      if (r.spec.fn === 'ester' && r.spec.n === 1) {
+        const h = { x: pts[0].x - dx * 0.8, y: pts[0].y - 30 };
+        parts.push(`<line class="cb-bond cb-bond-h" x1="${pts[0].x}" y1="${pts[0].y}" x2="${h.x}" y2="${h.y}"/>`);
+        parts.push(`<text class="cb-h" x="${h.x}" y="${h.y + 5}">H</text>`);
+      }
+      labels.forEach(([p, t]) => label(p, t));
+
+      return `<svg class="cb-svg" viewBox="0 0 ${width} 190" role="img" aria-label="Estructura de ${esc(r.name)}">${parts.join('')}</svg>
+      <p class="cb-svg-legend">Cada vértice sin letra es un carbono; el oxígeno (O) une las dos cadenas.</p>`;
     }
 
     // -------------------------------------------------------------- Utilidades

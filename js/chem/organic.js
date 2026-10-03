@@ -26,7 +26,11 @@
     aldehido: { label: 'Aldehído', suffix: '-al', general: 'C<sub>n</sub>H<sub>2n</sub>O', min: 1, terminal: true },
     cetona: { label: 'Cetona', suffix: '-ona', general: 'C<sub>n</sub>H<sub>2n</sub>O', min: 3, group: 'O' },
     acido: { label: 'Ácido carboxílico', suffix: '-oico', general: 'C<sub>n</sub>H<sub>2n</sub>O<sub>2</sub>', min: 1, terminal: true },
-    amina: { label: 'Amina', suffix: '-amina', general: 'C<sub>n</sub>H<sub>2n+3</sub>N', min: 1, group: 'NH2' }
+    amina: { label: 'Amina', suffix: '-amina', general: 'C<sub>n</sub>H<sub>2n+3</sub>N', min: 1, group: 'NH2' },
+    amida: { label: 'Amida', suffix: '-amida', general: 'C<sub>n</sub>H<sub>2n+1</sub>NO', min: 1, terminal: true },
+    nitrilo: { label: 'Nitrilo', suffix: '-nitrilo', general: 'C<sub>n</sub>H<sub>2n−1</sub>N', min: 1, terminal: true },
+    eter: { label: 'Éter', suffix: 'R–O–R′', general: 'C<sub>n</sub>H<sub>2n+2</sub>O', min: 1, twoChains: true },
+    ester: { label: 'Éster', suffix: '-ato de -ilo', general: 'C<sub>n</sub>H<sub>2n</sub>O<sub>2</sub>', min: 1, twoChains: true }
   };
 
   const SUBS = {
@@ -67,6 +71,14 @@
     'metanamina': 'metilamina',
     'etanamina': 'etilamina',
     'propan-1-amina': 'propilamina',
+    'metanamida': 'formamida',
+    'etanamida': 'acetamida',
+    'propanamida': 'propionamida',
+    'butanamida': 'butiramida',
+    'metanonitrilo': 'cianuro de hidrógeno (ácido cianhídrico)',
+    'etanonitrilo': 'acetonitrilo',
+    'propanonitrilo': 'propionitrilo',
+    'butanonitrilo': 'butironitrilo',
     'clorometano': 'cloruro de metilo',
     'diclorometano': 'cloruro de metileno',
     'triclorometano': 'cloroformo',
@@ -89,7 +101,7 @@
   function groupBonds(spec, i) {
     const { fn, pos } = spec;
     if (fn === 'aldehido' && i === 1) return 2;
-    if (fn === 'acido' && i === 1) return 3;
+    if ((fn === 'acido' || fn === 'amida' || fn === 'nitrilo') && i === 1) return 3;
     if ((fn === 'alcohol' || fn === 'amina') && pos === i) return 1;
     if (fn === 'cetona' && pos === i) return 2;
     return 0;
@@ -213,6 +225,8 @@
       case 'cetona': return n <= 4 ? `${r}anona` : `${r}an-${pos}-ona`;
       case 'acido': return `${r}anoico`;
       case 'amina': return n <= 2 ? `${r}anamina` : `${r}an-${pos}-amina`;
+      case 'amida': return `${r}anamida`;
+      case 'nitrilo': return `${r}anonitrilo`;
       default: return r;
     }
   }
@@ -233,6 +247,8 @@
 
     if (fn === 'aldehido' && i === 1) return n === 1 ? 'HCHO' : 'CHO';
     if (fn === 'acido' && i === 1) return n === 1 ? 'HCOOH' : 'COOH';
+    if (fn === 'amida' && i === 1) return n === 1 ? 'HCONH2' : 'CONH2';
+    if (fn === 'nitrilo' && i === 1) return n === 1 ? 'HCN' : 'CN';
 
     let label = 'C' + H(h);
     const alkyls = here.filter(s => SUBS[s.type].C);
@@ -288,6 +304,8 @@
       case 'aldehido': counts.O += 1; break;
       case 'cetona': counts.O += 1; break;
       case 'acido': counts.O += 2; counts.H += 1; break;
+      case 'amida': counts.O += 1; counts.N += 1; counts.H += 2; break;
+      case 'nitrilo': counts.N += 1; break;
       case 'amina': counts.N += 1; counts.H += 2; break;
       default: break;
     }
@@ -323,7 +341,9 @@
       aldehido: 'grupo –CHO en el extremo (siempre C1) → terminación <b>-al</b>.',
       cetona: 'grupo carbonilo C=O dentro de la cadena → terminación <b>-ona</b>.',
       acido: 'grupo carboxilo –COOH en el extremo (siempre C1) → «ácido …<b>-oico</b>».',
-      amina: 'grupo amino –NH₂ → terminación <b>-amina</b>.'
+      amina: 'grupo amino –NH₂ → terminación <b>-amina</b>.',
+      amida: 'grupo –CONH₂ en el extremo (siempre C1) → terminación <b>-amida</b>.',
+      nitrilo: 'grupo –C≡N en el extremo (su carbono es C1) → terminación <b>-nitrilo</b>.'
     };
     list.push(`Función ${f.label.toLowerCase()}: ${suffixWhy[spec.fn]}`);
     if (!f.terminal && spec.n > 2) {
@@ -338,8 +358,109 @@
     return list;
   }
 
+  // ---------- Éteres y ésteres (dos cadenas unidas por oxígeno) ----------
+  const MAX_SIDE = 6;
+  const ALKYL = ['', 'metil', 'etil', 'propil', 'butil', 'pentil', 'hexil'];
+  const ESTER_COMMON = ['', 'formiato', 'acetato', 'propionato', 'butirato', 'valerato'];
+
+  // Cadena escrita hacia la izquierda (termina en el átomo unido al O) o hacia la derecha
+  const chainLeft = k => (k === 1 ? 'CH3' : ['CH3', ...Array(k - 1).fill('CH2')].join('–'));
+  const chainRight = k => (k === 1 ? 'CH3' : [...Array(k - 1).fill('CH2'), 'CH3'].join('–'));
+
+  function reactionToHTML({ left, right }) {
+    const side = list => list.map(([c, f]) => `${c > 1 ? `<b class="coef">${c}</b>` : ''}${toHTML(f)}`).join(' + ');
+    return `${side(left)} <span class="arrow">→</span> ${side(right)}`;
+  }
+
+  function buildTwoChains(input) {
+    const fn = input.fn;
+    const n = Number(input.n);
+    const m = Number(input.m || 1);
+    const errors = [];
+    const maxN = fn === 'eter' ? MAX_SIDE : MAX_C;
+    if (!(n >= 1 && n <= maxN)) errors.push(`La primera cadena debe tener entre 1 y ${maxN} carbonos.`);
+    if (!(m >= 1 && m <= MAX_SIDE)) errors.push(`La segunda cadena debe tener entre 1 y ${MAX_SIDE} carbonos.`);
+    if ((input.subs || []).length) errors.push('En éteres y ésteres esta herramienta no admite sustituyentes.');
+    if (errors.length) return { ok: false, errors };
+
+    let name;
+    let commonName;
+    let condensed;
+    let counts;
+    let steps;
+    let reaction = null;
+    let drawing;
+
+    if (fn === 'eter') {
+      const a = Math.max(n, m); // cadena principal: la más larga
+      const b = Math.min(n, m);
+      const alkoxy = b <= 4 ? `${ROOTS[b]}oxi` : `${ROOTS[b]}iloxi`;
+      name = `${a >= 3 ? '1-' : ''}${alkoxy}${ROOTS[a]}ano`;
+      commonName = a === b
+        ? `di${ALKYL[a]} éter`
+        : `${[ALKYL[a], ALKYL[b]].sort((x, y) => x.localeCompare(y, 'es')).join(' ')} éter`;
+      if (a === 2 && b === 2) commonName = 'dietil éter (éter etílico)';
+      if (a === 1 && b === 1) commonName = 'dimetil éter';
+      condensed = `${chainLeft(b)}–O–${chainRight(a)}`;
+      counts = { C: a + b, H: 2 * (a + b) + 2, O: 1, N: 0, F: 0, Cl: 0, Br: 0, I: 0 };
+      steps = [
+        `Un éter tiene un oxígeno entre dos cadenas: R–O–R′ (aquí ${b} y ${a} carbonos).`,
+        `La cadena más larga (${a} C) es la principal → <b>${ROOTS[a]}ano</b>.`,
+        `La cadena corta + oxígeno se nombra como prefijo <b>«${alkoxy}»</b>${a >= 3 ? ', unido al carbono 1' : ''}.`,
+        'Nombre común (radicofuncional): los dos radicales en orden alfabético + «éter».'
+      ];
+      if (a === b) {
+        const alc = a === 1 ? 'CH3OH' : `${chainLeft(a).replace(/–/g, '')}OH`;
+        reaction = { left: [[2, alc]], right: [[1, condensed.replace(/–/g, '')], [1, 'H2O']] };
+      }
+      drawing = [...Array(b).fill('C'), 'O', ...Array(a).fill('C')].map(label => ({ label }));
+    } else {
+      const acid = `${ROOTS[n]}anoato`;
+      const alkyl = `${ALKYL[m]}o`;
+      name = `${acid} de ${alkyl}`;
+      commonName = ESTER_COMMON[n] ? `${ESTER_COMMON[n]} de ${alkyl}` : null;
+      const acidPart = n === 1 ? 'HCOO' : `${chainLeft(n - 1)}–COO`;
+      condensed = `${acidPart}–${chainRight(m)}`;
+      counts = { C: n + m, H: 2 * (n + m), O: 2, N: 0, F: 0, Cl: 0, Br: 0, I: 0 };
+      const acidFormula = n === 1 ? 'HCOOH' : `${chainLeft(n - 1).replace(/–/g, '')}COOH`;
+      const alcFormula = `${chainLeft(m).replace(/–/g, '')}OH`;
+      reaction = { left: [[1, acidFormula], [1, alcFormula]], right: [[1, condensed.replace(/–/g, '')], [1, 'H2O']] };
+      steps = [
+        `Un éster se forma al unir un ácido carboxílico (${n} C) con un alcohol (${m} C): <b>esterificación</b>.`,
+        `La parte del ácido cambia <b>-oico</b> por <b>-oato</b>: ácido ${ROOTS[n]}anoico → <b>${acid}</b>.`,
+        `La parte del alcohol se nombra como radical terminado en <b>-ilo</b>: <b>${alkyl}</b>.`,
+        `Nombre: «${acid} de ${alkyl}».`
+      ];
+      drawing = [
+        ...Array(n).fill(null).map((_, k) => ({ label: 'C', carbonyl: k === n - 1 })),
+        { label: 'O' },
+        ...Array(m).fill('C').map(label => ({ label }))
+      ];
+    }
+
+    const formula = molecularFormula(counts);
+    return {
+      ok: true,
+      spec: { fn, n, m, subs: [] },
+      renumbered: false,
+      name,
+      commonName,
+      formula,
+      formulaHTML: toHTML(formula),
+      condensed,
+      condensedHTML: toHTML(condensed),
+      general: FUNCS[fn].general,
+      functionLabel: FUNCS[fn].label,
+      molarMass: molarMass(counts),
+      reactionHTML: reaction ? reactionToHTML(reaction) : null,
+      drawing,
+      steps
+    };
+  }
+
   /** Punto de entrada: build({ fn: 'alcohol', n: 3, pos: 2, subs: [{ type: 'metil', pos: 2 }] }) */
   function build(input) {
+    if (FUNCS[input.fn] && FUNCS[input.fn].twoChains) return buildTwoChains(input);
     const spec = {
       fn: input.fn,
       n: Number(input.n),
@@ -377,7 +498,7 @@
     };
   }
 
-  const api = { FUNCS, SUBS, ROOTS, MAX_C, MAX_SUBS, build, validate, positionRange, subRange };
+  const api = { FUNCS, SUBS, ROOTS, MAX_C, MAX_SUBS, MAX_SIDE, build, validate, positionRange, subRange };
   root.OrganicChem = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : global);

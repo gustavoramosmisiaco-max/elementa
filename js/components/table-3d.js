@@ -39,7 +39,7 @@
           <button class="t3d-btn" data-layout="sphere">🌐 Esfera Atómica</button>
           <button class="t3d-btn" id="btnResetCamera3D">🔄 Centrar</button>
         </div>
-        <div class="table3d-hint">🖱️ Arrastra para rotar | Rueda para zoom | Clic en elemento para ver ficha</div>
+        <div class="table3d-hint"><span class="hint-pointer">🖱️ Arrastra para rotar | Rueda para zoom | Clic en elemento para ver ficha</span><span class="hint-touch">👆 Arrastra para rotar · Pellizca para zoom · Toca un elemento para ver su ficha</span></div>
       `;
       this.container.appendChild(controlsBar);
 
@@ -48,7 +48,7 @@
       this.canvasWrapper.className = 'table3d-canvas-wrapper';
       this.canvasWrapper.style.position = 'relative';
       this.canvasWrapper.style.width = '100%';
-      this.canvasWrapper.style.height = '620px';
+      this.canvasWrapper.style.height = 'clamp(360px, 68vh, 620px)';
       this.canvasWrapper.style.overflow = 'hidden';
       this.canvasWrapper.style.borderRadius = '12px';
       this.canvasWrapper.style.background = 'radial-gradient(circle at center, #111827 0%, #030712 100%)';
@@ -64,7 +64,7 @@
 
       // Camera
       this.camera = new THREE.PerspectiveCamera(40, width / height, 1, 10000);
-      this.camera.position.z = 2400;
+      this.camera.position.z = this.fitDistance(width / height);
 
       // Renderer
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -79,8 +79,76 @@
       this.buildElements3D();
       this.calculateLayouts();
       this.setupControls();
+      this.setupTouchAndResize();
       this.transform(this.targets.grid, 2000);
       this.animate();
+    }
+
+    /** Distancia de cámara para que la tabla completa (≈2600 × 1750 u) quepa en el lienzo */
+    fitDistance(aspect) {
+      const halfFov = THREE.MathUtils.degToRad(this.camera ? this.camera.fov / 2 : 20);
+      const byWidth = 1300 / (Math.tan(halfFov) * aspect);
+      const byHeight = 875 / Math.tan(halfFov);
+      return Math.max(800, Math.min(9000, Math.max(byWidth, byHeight) * 1.05));
+    }
+
+    /** Gestos táctiles (rotar con un dedo, pellizcar para zoom) y ajuste al cambiar de tamaño */
+    setupTouchAndResize() {
+      const el = this.renderer.domElement;
+      let last = null;
+      let pinch = 0;
+      let moved = false;
+
+      el.style.touchAction = 'none';
+      el.addEventListener('touchstart', (e) => {
+        moved = false;
+        if (e.touches.length === 1) {
+          this.isMouseDown = true;
+          last = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.touches.length === 2) {
+          pinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        }
+      }, { passive: true });
+
+      el.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        moved = true;
+        if (e.touches.length === 1 && last) {
+          const t = e.touches[0];
+          this.rootGroup.rotation.y += (t.clientX - last.x) * 0.006;
+          this.rootGroup.rotation.x += (t.clientY - last.y) * 0.006;
+          last = { x: t.clientX, y: t.clientY };
+        } else if (e.touches.length === 2) {
+          const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+          this.camera.position.z = Math.max(800, Math.min(9000, this.camera.position.z * (pinch / d)));
+          pinch = d;
+        }
+      }, { passive: false });
+
+      el.addEventListener('touchend', (e) => {
+        this.isMouseDown = false;
+        last = null;
+        // Un arrastre no debe abrir la ficha del elemento que quede bajo el dedo
+        if (moved) e.preventDefault();
+      });
+
+      if (typeof ResizeObserver !== 'undefined') {
+        let prevAspect = this.camera.aspect;
+        this.resizeObserver = new ResizeObserver(() => {
+          const w = this.canvasWrapper.clientWidth;
+          const h = this.canvasWrapper.clientHeight;
+          if (!w || !h) return;
+          const aspect = w / h;
+          // Mantiene el mismo encuadre relativo si el usuario ya había hecho zoom
+          const ratio = this.camera.position.z / this.fitDistance(prevAspect);
+          this.camera.aspect = aspect;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(w, h);
+          this.camera.position.z = this.fitDistance(aspect) * ratio;
+          prevAspect = aspect;
+        });
+        this.resizeObserver.observe(this.canvasWrapper);
+      }
     }
 
     createCardTexture(element) {
@@ -264,7 +332,7 @@
       const resetBtn = this.container.querySelector('#btnResetCamera3D');
       if (resetBtn) {
         resetBtn.addEventListener('click', () => {
-          this.camera.position.set(0, 0, 2400);
+          this.camera.position.set(0, 0, this.fitDistance(this.camera.aspect));
           this.rootGroup.rotation.set(0, 0, 0);
         });
       }
@@ -292,7 +360,7 @@
       el.addEventListener('wheel', (e) => {
         e.preventDefault();
         this.camera.position.z += e.deltaY * 1.5;
-        this.camera.position.z = Math.max(800, Math.min(5000, this.camera.position.z));
+        this.camera.position.z = Math.max(800, Math.min(9000, this.camera.position.z));
       }, { passive: false });
 
       // Click to open element modal
